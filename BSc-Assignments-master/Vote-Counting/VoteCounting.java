@@ -1,0 +1,173 @@
+/*@author Sam O'Floinn. For Assignment A4, CS2504
+ * This class simulates a voting program; it takes in a list of candidates
+ * and the votes which they have been given, applies those votes to each candidate, and
+ * then determines which of them has been chosen overall. This system considers alternative preferences,
+ * and removes defeated candidates over rounds of elimination that occur until only one candidate remains. */
+
+import java.util.Random;
+import java.util.Iterator;
+
+public class VoteCounting
+{
+  /* Our constructor takes in a list of candidates, which it enters
+   * into the voting list. There is also an announcement to the user. */
+  public VoteCounting(ArrayBasedList<Candidate> input)
+  {
+    list = input;
+    ArrayBasedList<BallotPaper> emptyList = new ArrayBasedList<BallotPaper> ();
+    System.out.println("Today is voting day! Who is up for election?");
+
+    for (Candidate cand: list)
+    {
+      votes.put(cand, emptyList);
+      System.out.println(cand.getName() + " of the " + cand.getParty() + " party!");
+    }
+  }
+
+  /* This method shows us the scores of the candidates
+   * still in the voting list.*/
+  public void seeVotes()
+  {
+    for (Candidate cand : list)
+    {
+      if (votes.get(cand) != null)
+      {
+        System.out.println( cand.getName() + " votes: " + (votes.get(cand) ).size() );
+      }
+    }
+  }
+
+  /* This method is responsible
+   * for determining which candidate is losing out among
+   * those still within the current voting list.
+   * */
+  public Candidate losingCandidate()
+  {
+    ABMIterator iterator = new ABMIterator(votes);
+    Entry<Candidate, ArrayBasedList<BallotPaper> > entry = iterator.next();
+    Candidate unluckyOne = entry.getKey();
+    while (iterator.hasNext() )
+    {
+      entry = iterator.next();
+      System.out.print("At the moment, " + unluckyOne.getName() + " is the candidate with the least votes");
+      if ( (votes.get(entry.getKey() ) ).size() < (votes.get(unluckyOne) ).size() )
+      {
+        unluckyOne = entry.getKey();
+        System.out.println(", but we have found a candidate with even fewer!");
+      }
+      else if ( (votes.get(entry.getKey() ) ).size() == (votes.get(unluckyOne) ).size() )
+      {
+        System.out.println(", but is now tied with " + (entry.getKey()).getName() + "!");
+        unluckyOne = tieBreaker( entry.getKey(), unluckyOne);
+      }
+      else
+      {
+        System.out.println("");
+      }
+    }
+    System.out.println(unluckyOne.getName() + " has " + (votes.get(unluckyOne) ).size() + " - fewer than anyone else. This candidate is defeated!");
+    return unluckyOne;
+  }
+
+  /* This method takes in a candidate - in context,
+   * the candidate with the fewest votes - extracts its votes to their 
+   * next-preferred voters, and then removes the candidate from the voting list.
+   * */
+  public void removeCandidate(Candidate poorGuy)
+  {
+    while ( !(votes.get(poorGuy) ).isEmpty() ) //while there are still ballot papers within the losing candidate's entry list...
+    {
+      BallotPaper paperToMove = (votes.get(poorGuy) ).get(0);  //refer to the first paper in the list.
+      int i = 0;
+      boolean finallyMoved = false;
+      while (!finallyMoved && i <= votes.size() )
+      {
+        if (votes.get(paperToMove.getPreference(i + 1) ) != null && paperToMove.getPreference(i + 1) != poorGuy)
+        {
+          (votes.get(paperToMove.getPreference(i + 1) ) ).add(paperToMove);
+          System.out.println("One of " + poorGuy.getName() + "'s papers is now added to " + (paperToMove.getPreference(i + 1) ).getName() + "'s pile.");
+          finallyMoved = true;
+        }
+        i++;
+      }
+      (votes.get(poorGuy) ).remove(0);   //remember, since paperToMove is the same as the '0' entry in poorGuy's ballot-list, removing the front object is the same as removing the paper we have just moved!
+    }
+    System.out.println(poorGuy.getName() + "'s votes have all been transferred. Now being removed from the candidate list...");
+    votes.remove(poorGuy);
+  }
+
+  /* This method is applied for when two candidates are tied for last place.
+   * It takes in two candidates - in context to the program, these two candidates are ones who are tied for last place - 
+   * and returns one of them at random (in context, the candidate it returns is considered the loser in the main program).
+   * */
+  private Candidate tieBreaker(Candidate zero, Candidate one)
+  {
+    System.out.print("We have a tie between " + zero.getName() + " and " + one.getName() + "! Deciding...");
+    System.out.println("...");
+    Random coinFlip = new Random();
+    int flip = coinFlip.nextInt(2);
+    if (flip == 0)
+    {
+      System.out.println(zero.getName() + " is the losing candidate!");
+      return zero;
+    }
+    else  //the only other possibility is that flip == 1.
+    {
+      System.out.println(one.getName() + " is the losing candidate!");
+      return one;
+    }
+  }
+
+  /* Our main method, this takes in
+   * a list of ballot papers and assigns their votes to each
+   * of the candidates in the voting list, and then begins a series of elimination rounds that
+   * removes the candidate with the fewest votes, thus transferring their votes to the next preference
+   * amongst those voters.
+   * 
+   * This method is twofold amongst while-loops; the first loop initialises our voting list,
+   * while the second runs the process of elimination that lasts until only one candidate remains in the voting list
+   * with all the votes - that candidate is the winner.
+   * */
+  public void determineResult(ArrayBasedList<BallotPaper> paperList)
+  {
+    ABMIterator iterator = new ABMIterator(votes);
+    while (iterator.hasNext() )
+    {
+      Entry<Candidate, ArrayBasedList<BallotPaper>> entry = iterator.next();
+      /*The 'Entry' object, combined with the iterator, allow us to navigate through the map and refer to either the key or the value. */
+      for (BallotPaper paper: paperList)  //then going through every paper in the list, with that candidate in mind.
+      {
+        if (paper.getPreference(1) == entry.getKey() )
+        {
+          /*a temporary array list used to store the values of the current list, it will also be given the new papers to be added.*/
+          ArrayBasedList<BallotPaper> tempList = new ArrayBasedList<BallotPaper>();
+          for (BallotPaper oldPaper : votes.get(entry.getKey() ) )
+          {
+            tempList.add(oldPaper);  //puts all the values currently in the candidate's votelist into the temporary list.
+          }
+          tempList.add(paper);  //adds the new value to this list.
+          votes.put(entry.getKey(), tempList);  //overwrites the cand's current list with tempList,
+        }
+      }
+    }
+    while (votes.size() > 1)
+    {
+      ABMIterator roundIterator = new ABMIterator(votes);
+      while (roundIterator.hasNext() )
+      {
+        Entry<Candidate, ArrayBasedList<BallotPaper>> entry = roundIterator.next();
+      }
+      seeVotes();
+      removeCandidate(losingCandidate() );
+    }
+
+    System.out.println("There is only one candidate remaining! This person is the winner!");
+    /*Declare the winner!*/
+    ABMIterator finalList = new ABMIterator(votes);
+    Entry<Candidate, ArrayBasedList<BallotPaper>> winner = finalList.next();
+    System.out.println("Congratulations, " + (winner.getKey() ).getName() + "!");
+  }
+
+  private ArrayBasedList<Candidate> list = new ArrayBasedList<Candidate> ();  //our reference to the list of candidates given to us by the user.
+  private ArrayBasedMap<Candidate, ArrayBasedList<BallotPaper> > votes = new ArrayBasedMap<Candidate, ArrayBasedList<BallotPaper> > ();  //our voting list. Crucial in determineResult method.
+}

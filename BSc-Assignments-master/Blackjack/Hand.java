@@ -1,0 +1,123 @@
+/**
+ * @author Sam O'Floinn
+ * The Hand class represents both the player and the hand of cards the player has. It has these priorities:
+ * - It must be of no size greater than 5.
+ * - Players must be able to look at it.
+ * - For new games to be played, or new rounds of the same game to exist, there must be the option to empty the entire hand.
+ * 
+ */
+import java.util.ArrayList;
+import java.util.Random;
+
+public class Hand
+{
+  private ArrayList<Card> hand = new ArrayList<Card>();
+  
+  private boolean stuck;
+  private String name;
+  private int index;
+  private int numWins;
+  
+  private Random rand = new Random();
+  
+  public Hand(String input)
+  {
+    numWins = 0;
+    index = 0;
+    stuck = false;
+    name = input;
+  }
+  
+  /**
+   * @param Works with the code in the BlackJack class to show a single card to the user. 
+   */
+  public Card showOneCard()
+  {
+    int cardSpot = rand.nextInt((size()));
+    return hand.get(cardSpot);
+  }
+  /**
+   * @param Adds a card to the hand. 
+   */
+  public void add(Card card)
+  {
+    if (index < 5)
+    {
+      hand.add(card);
+      //System.out.println(getName() + " received the " + (hand.get(index)).getName() + " of " + (hand.get(index)).getType() + " into position " + (index + 1) + " of his hand!"); */
+      index++;
+    }
+    else
+    {
+      System.out.println("The hand is already full.");
+    }
+  }
+  
+  public String getName()
+  {
+    return name;
+  }
+  
+  /**@param For replays to work, this method is needed. 
+    * What's the fun in playing Blackjack with the same hand over and over? 
+    */
+  public void emptyHand()
+  {
+    index = 0;
+    ArrayList<Card> newHand = new ArrayList<Card>();
+    hand = newHand;
+  }
+  
+  /**@param
+   * Allows the user to see the cards in his hand.
+   */
+  public void printHand()
+  {
+    for (int i = 0; i < hand.size(); i++)
+    {
+      System.out.println("Position " + (i + 1));
+      hand.get(i).printCard();
+      
+    }
+  }
+  /**@param Keeps score of the amount of wins based upon BlackJack's replay() method.
+   * Stored here so it can be used anywhere.
+   */
+  
+  public void wins()
+  {
+    numWins++;
+    System.out.println(getName() + " win count: " + numWins);
+  }
+  
+  /** 
+   * @param The getSum() method is crucial to the program's additions.
+   * */
+  public int getSum()
+  {
+    int sum = 0;
+    for (int i = 0; i < hand.size(); i++)
+    {
+      sum = sum + (hand.get(i)).getValue();
+    }
+    return sum;
+  }
+  
+  /**
+   * @param hasStuck() and stick() manage the condition and action 
+   * where the player chooses to not draw any more cards. */
+  public boolean hasStuck()
+  {
+    return stuck;
+  }
+  
+  public void stick()
+  {
+    stuck = !stuck;
+  }
+  
+  public int size() {
+    return hand.size();
+  }
+  
+}

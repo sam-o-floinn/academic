@@ -1,0 +1,32 @@
+public class Candidate 
+{
+  public Candidate(String name, String party)
+  {
+    candidateName = name;
+    candidateParty = party;
+  }
+  //Must define two setters for the name and party, and then two getters for them too.
+  
+  public String getName()
+  {
+    return candidateName;
+  }
+  
+  public String getParty()
+  {
+    return candidateParty;
+  }
+  
+  private String candidateName;
+  private String candidateParty;
+  public int votes;
+  
+  ArrayBasedMap<BallotPaper, Integer> vote = new ArrayBasedMap<BallotPaper, Integer> ();
+  
+  public static void main (String[] args)
+  {
+    Candidate dustin = new Candidate("Dustin the Turkey", "RTÉ");
+    BallotPaper paperOne = new BallotPaper();
+    dustin.vote.put(paperOne, 3);
+  }
+}
